@@ -1,0 +1,36 @@
+<!doctype html><html lang="th"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#100814"><meta name="description" content="เพลงไรวะ — เกมทายเพลงไทย">
+<title>เพลงไรวะ 🎧</title><link rel="stylesheet" href="style.css"><link rel="manifest" href="manifest.webmanifest">
+</head><body><main class="app">
+<header><button id="home">↻</button><div><h1>เพลงไรวะ 🎧</h1><small>PLENG RAI WA?</small></div><button id="mute">🔊</button></header>
+
+<section id="setup">
+<div class="tag">🇹🇭 THAI SONG GUESS</div><h2>0.5 วิ<br><span>รู้มั้ยเพลงอะไร?</span></h2>
+<p>เลือกหมวด แล้วระบบจะดึงเพลงที่มีตัวอย่างเสียงให้อัตโนมัติ</p>
+<div id="modes" class="modes">
+<button class="mode active" data-mode="ฮิตไทย">🔥 เพลงฮิตไทย</button><button class="mode" data-mode="T-POP">💗 T-POP</button>
+<button class="mode" data-mode="2000s">💿 2000s</button><button class="mode" data-mode="ลูกทุ่ง">🌾 ลูกทุ่ง</button>
+<button class="mode" data-mode="อินดี้">🎸 อินดี้</button><button class="mode" data-mode="สุ่มทั้งหมด">🎲 สุ่มทั้งหมด</button>
+</div><button class="primary big" id="start">เริ่มเล่น 5 เพลง</button>
+<p class="tiny">ไม่เก็บ MP3 เพลงลิขสิทธิ์ไว้ในเว็บ</p></section>
+
+<section id="loading" class="hidden center"><div class="spinner"></div><h2>กำลังหาเพลงไทย…</h2><p id="loadingText"></p></section>
+
+<section id="game" class="hidden">
+<div class="row"><div><div class="tag" id="modeLabel"></div><h2><span id="seconds">0.5</span> วิ รู้มั้ยเพลงอะไร?</h2></div><div class="score">⭐ <b id="score">0</b></div></div>
+<div class="levels"><span class="active">Easy</span><span>Medium</span><span>Hard</span><span>Expert</span><span>Impossible</span></div>
+<div class="bar"><i id="bar"></i></div><p class="small"><b id="sec2">0.5</b> วินาที</p>
+<button id="play" class="play">▶</button><p id="audioState" class="center small">กด Play แล้วทายเลย</p>
+<div class="search"><input id="answer" placeholder="ค้นหาชื่อเพลง หรือ ศิลปิน…" autocomplete="off"><div id="suggestions" class="suggestions"></div></div>
+<button id="submit" class="primary">ตอบคำถาม</button><button id="skip" class="secondary">⏭ ไม่รู้ / ฟังเพิ่ม</button>
+<div class="row small"><span>เพลงที่ <b id="round">1</b> / 5</span><span id="remain"></span></div><p id="msg" class="center small pink"></p>
+</section></main>
+
+<div id="result" class="overlay hidden"><div class="modal"><div id="okIcon" class="resultIcon">✓</div><b id="okText" class="pill">ถูกต้อง!</b>
+<img id="art" class="art"><h2 id="title"></h2><p id="artist"></p><div id="gain" class="gain"></div>
+<a id="apple" target="_blank" rel="noopener">ฟังเพลงเต็ม ↗</a><button id="next" class="primary">เพลงถัดไป →</button></div></div>
+
+<div id="finish" class="overlay hidden"><div class="modal"><div class="resultIcon">🏆</div><b class="pill">จบเกมแล้ว</b><h2>มึงรู้เพลงไทยแค่ไหน?</h2>
+<div id="final" class="final"></div><pre id="share"></pre><button id="again" class="primary">เล่นอีกรอบ</button><button id="copy" class="secondary">คัดลอกผล</button></div></div>
+<script src="app.js"></script></body></html>
