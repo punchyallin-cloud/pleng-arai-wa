@@ -19,12 +19,31 @@
 
 <section id="game" class="hidden">
 <div class="row"><div><div class="tag" id="modeLabel"></div><h2><span id="seconds">0.5</span> วิ รู้มั้ยเพลงอะไร?</h2></div><div class="score">⭐ <b id="score">0</b></div></div>
-<div class="levels"><span class="active">Easy</span><span>Medium</span><span>Hard</span><span>Expert</span><span>Impossible</span></div>
+
+<div class="difficulty-strip" aria-label="ระดับความยาก">
+  <div class="difficulty-pill easy active">Easy</div>
+  <div class="difficulty-pill medium">Medium</div>
+  <div class="difficulty-pill hard">Hard</div>
+  <div class="difficulty-pill impossible">Impossible</div>
+</div>
+<div class="listen-wrap">
+  <div class="listen-bar">
+    <span class="listen-segment active"></span>
+    <span class="listen-segment"></span>
+    <span class="listen-segment"></span>
+    <span class="listen-segment"></span>
+  </div>
+  <div class="listen-meta">
+    <span id="listen-seconds">1.5 วินาที</span>
+    <span id="difficulty-now">Easy</span>
+  </div>
+</div>
+
 <div class="bar"><i id="bar"></i></div><p class="small"><b id="sec2">0.5</b> วินาที</p>
 <button id="play" class="play">▶</button><p id="audioState" class="center small">กด Play แล้วทายเลย</p>
 <div class="search"><input id="answer" placeholder="ค้นหาชื่อเพลง หรือ ศิลปิน…" autocomplete="off"><div id="suggestions" class="suggestions"></div></div>
 <button id="submit" class="primary">ตอบคำถาม</button><button id="skip" class="secondary">⏭ ไม่รู้ / ฟังเพิ่ม</button>
-<div class="row small"><span>เพลงที่ <b id="round">1</b> / 5</span><span id="remain"></span></div><p id="msg" class="center small pink"></p>
+<div class="row small"><span>เพลงที่ <b id="round">1</b> / 4</span><span id="remain"></span></div><p id="msg" class="center small pink"></p>
 </section></main>
 
 <div id="result" class="overlay hidden"><div class="modal"><div id="okIcon" class="resultIcon">✓</div><b id="okText" class="pill">ถูกต้อง!</b>
