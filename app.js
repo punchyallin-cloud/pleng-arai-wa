@@ -13,15 +13,16 @@ const LEVELS=[
 ];
 const $=x=>document.getElementById(x),E={setup:$("setup"),loading:$("loading"),game:$("game"),start:$("start"),modes:$("modes"),lt:$("loadingText"),ml:$("modeLabel"),sec:$("seconds"),sec2:$("sec2"),bar:$("bar"),play:$("play"),as:$("audioState"),ans:$("answer"),sugs:$("suggestions"),submit:$("submit"),skip:$("skip"),score:$("score"),round:$("round"),remain:$("remain"),msg:$("msg"),result:$("result"),okIcon:$("okIcon"),okText:$("okText"),art:$("art"),title:$("title"),artist:$("artist"),gain:$("gain"),apple:$("apple"),next:$("next"),finish:$("finish"),final:$("final"),share:$("share"),again:$("again"),copy:$("copy"),home:$("home"),mute:$("mute")};
 let mode="ฮิตไทย",pool=[],list=[],r=0,step=0,score=0,audio=null,timer=null,muted=false,selected=null,searchTimer=null;
+let artistFilter="ALL";
 
 function jsonp(term,limit=60){return new Promise((res,rej)=>{let cb="__prw"+Date.now()+Math.random().toString(36).slice(2),s=document.createElement("script"),t=setTimeout(()=>done(new Error("timeout")),10000);function done(e,d){clearTimeout(t);delete window[cb];s.remove();e?rej(e):res(d)}window[cb]=d=>done(null,d);let p=new URLSearchParams({term,country:"TH",media:"music",entity:"song",limit:String(limit),callback:cb});s.src="https://itunes.apple.com/search?"+p;s.onerror=()=>done(new Error("network"));document.body.appendChild(s)})}
 function clean(a){let m=new Map;(a||[]).forEach(x=>{if(x.previewUrl&&x.trackName&&x.artistName&&!m.has(x.trackId))m.set(x.trackId,{id:x.trackId,title:x.trackName,artist:x.artistName,preview:x.previewUrl,art:(x.artworkUrl100||"").replace("100x100bb","500x500bb"),url:x.trackViewUrl||""})});return[...m.values()]}
 function shuffle(a){a=[...a];for(let i=a.length-1;i;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-async function build(){let all=[],artists=C.artists[mode]||C.artists["ฮิตไทย"];for(let i=0;i<artists.length;i++){let wanted=artists[i];E.lt.textContent=`กำลังเตรียมเพลง ${i+1}/${artists.length}`;try{let d=await jsonp(wanted,35);let rows=clean(d.results).filter(x=>{let aa=norm(x.artist),w=norm(wanted);return aa===w||aa.includes(w)||w.includes(aa)});all.push(...rows.slice(0,8))}catch{}}pool=[...new Map(all.map(x=>[(answerKey(x.artist)+"|"+answerKey(x.title)),x])).values()];if(pool.length<5)throw Error()}
+async function build(){let all=[],artists=(mode==="T-POP"&&artistFilter!=="ALL")?[artistFilter]:(C.artists[mode]||C.artists["ฮิตไทย"]);for(let i=0;i<artists.length;i++){let wanted=artists[i];E.lt.textContent=`กำลังเตรียมเพลง ${i+1}/${artists.length}`;try{let d=await jsonp(wanted,35);let rows=clean(d.results).filter(x=>{let aa=norm(x.artist),w=norm(wanted);return aa===w||aa.includes(w)||w.includes(aa)});all.push(...rows.slice(0,8))}catch{}}pool=[...new Map(all.map(x=>[(answerKey(x.artist)+"|"+answerKey(x.title)),x])).values()];if(pool.length<5)throw Error()}
 async function start(){E.setup.classList.add("hidden");E.loading.classList.remove("hidden");E.game.classList.add("hidden");try{await build();list=shuffle(pool).slice(0,C.rounds);r=0;step=0;score=0;E.score.textContent=0;E.ml.textContent=mode;E.loading.classList.add("hidden");E.game.classList.remove("hidden");load()}catch{E.loading.classList.add("hidden");E.setup.classList.remove("hidden");alert("โหลดเพลงไม่ได้ ลองเช็กอินเทอร์เน็ตแล้วกดใหม่")}}
 function cur(){return list[r]}function stop(){clearTimeout(timer);if(audio){audio.pause();audio.currentTime=0}E.play.textContent="▶"}
-function load(){stop();step=0;selected=null;E.ans.value="";E.msg.textContent="";E.sugs.style.display="none";E.round.textContent=r+1;audio=new Audio(cur().preview);audio.muted=muted;draw()}
-function draw(){try{updateDifficultyUI();updateListenBar()}catch(e){}E.sec.textContent=C.steps[step];E.sec2.textContent=C.steps[step];E.bar.style.width=(((step+1)/C.steps.length)*100)+"%";document.querySelectorAll(".levels span").forEach((x,i)=>x.classList.toggle("active",i===step));E.remain.textContent=step===C.steps.length-1?"รอบสุดท้าย":`เหลืออีก ${C.steps.length-1-step} ระดับ`}
+function load(){stop();step=0;setTimeout(()=>{try{updateDifficultyUI();updateListenBar()}catch(e){}},0);selected=null;E.ans.value="";E.msg.textContent="";E.sugs.style.display="none";E.round.textContent=r+1;audio=new Audio(cur().preview);audio.muted=muted;draw()}
+function draw(){try{updateDifficultyUI();updateListenBar()}catch(e){}E.sec.textContent=C.steps[step];document.querySelectorAll(".levels span").forEach((x,i)=>x.classList.toggle("active",i===step));E.remain.textContent=step===C.steps.length-1?"รอบสุดท้าย":`เหลืออีก ${C.steps.length-1-step} ระดับ`}
 async function play(){stop();try{audio.currentTime=0;E.play.textContent="❚❚";E.as.textContent=`🎵 กำลังเล่น ${C.steps[step]} วินาที…`;await audio.play();timer=setTimeout(()=>{audio.pause();E.play.textContent="▶";E.as.textContent="หยุดแล้ว — ทายเลย!"},C.steps[step]*1000)}catch{E.as.textContent="ลองกด Play อีกครั้ง"}}
 function coreTitle(v){
  let s=(v||"").toLowerCase().normalize("NFKC");
@@ -48,7 +49,26 @@ function show(ok){stop();let pts=ok?Math.max(200,1000-step*180):0;if(ok)score+=p
 function next(){E.result.classList.add("hidden");r++;r>=C.rounds?finish():load()}
 function finish(){stop();E.game.classList.add("hidden");E.final.textContent=score;let txt=`เพลงไรวะ 🎧\n${mode}\n${score} คะแนน / ${C.rounds} เพลง\n1.5 วิ รู้มั้ยเพลงอะไร?`;E.share.textContent=txt;E.finish.classList.remove("hidden")}
 function home(){stop();E.result.classList.add("hidden");E.finish.classList.add("hidden");E.game.classList.add("hidden");E.loading.classList.add("hidden");E.setup.classList.remove("hidden")}
-async function search(q){if(q.trim().length<2){E.sugs.style.display="none";return}let nq=norm(q);render(pool.filter(x=>norm(x.title).includes(nq)||norm(x.artist).includes(nq)).slice(0,8))}
+async function search(q){
+ if(q.trim().length<2){E.sugs.style.display="none";return}
+ let nq=norm(q),candidates=pool.filter(x=>norm(x.title).includes(nq)||norm(x.artist).includes(nq));
+ try{
+   let d=await jsonp(q,25);
+   let extra=clean(d.results).filter(x=>{
+     let allowed=[...new Set(Object.values(C.artists).flat())];
+     return allowed.some(a=>{let aa=norm(x.artist),w=norm(a);return aa===w||aa.includes(w)||w.includes(aa)});
+   });
+   candidates.push(...extra);
+ }catch(e){}
+ candidates=[...new Map(candidates.map(x=>[x.id,x])).values()];
+ candidates=shuffle(candidates);
+ // Never collapse to a single obvious answer: if fewer than 5 matches, pad with random pool decoys.
+ if(candidates.length<5){
+   let used=new Set(candidates.map(x=>x.id));
+   shuffle(pool).forEach(x=>{if(candidates.length<6&&!used.has(x.id)){candidates.push(x);used.add(x.id)}});
+ }
+ render(candidates.slice(0,8))
+}
 function render(a){E.sugs.innerHTML="";a.slice(0,8).forEach(s=>{let b=document.createElement("button");b.type="button";b.className="sug";let im=document.createElement("img");im.src=s.art;let sp=document.createElement("span"),x=document.createElement("b"),y=document.createElement("small");x.textContent=s.title;y.textContent=s.artist;sp.append(x,y);b.append(im,sp);b.onclick=()=>{selected=s;E.ans.value=s.title;E.sugs.style.display="none"};E.sugs.appendChild(b)});E.sugs.style.display=a.length?"block":"none"}
 E.modes.onclick=e=>{let b=e.target.closest(".mode");if(!b)return;document.querySelectorAll(".mode").forEach(x=>x.classList.remove("active"));b.classList.add("active");mode=b.dataset.mode};
 E.start.onclick=start;E.play.onclick=play;E.submit.onclick=submit;E.skip.onclick=skip;E.next.onclick=next;E.again.onclick=()=>{E.finish.classList.add("hidden");start()};E.home.onclick=home;E.mute.onclick=()=>{muted=!muted;if(audio)audio.muted=muted;E.mute.textContent=muted?"🔇":"🔊"};
@@ -57,3 +77,20 @@ E.copy.onclick=async()=>{try{await navigator.clipboard.writeText(E.share.textCon
 
 document.addEventListener("click",()=>{setTimeout(()=>{try{updateDifficultyUI();updateListenBar()}catch(e){}},0)});
 window.addEventListener("load",()=>{setTimeout(()=>{try{updateDifficultyUI();updateListenBar()}catch(e){}},300)});
+
+const artistFilters=document.getElementById("artistFilters");
+function syncArtistFilters(){
+  if(!artistFilters)return;
+  artistFilters.classList.toggle("hidden",mode!=="T-POP");
+}
+if(artistFilters){
+ artistFilters.onclick=e=>{
+   const b=e.target.closest(".artist-chip"); if(!b)return;
+   artistFilters.querySelectorAll(".artist-chip").forEach(x=>x.classList.remove("active"));
+   b.classList.add("active"); artistFilter=b.dataset.artist||"ALL";
+ };
+}
+if(E.modes){
+ E.modes.addEventListener("click",()=>setTimeout(syncArtistFilters,0));
+}
+syncArtistFilters();

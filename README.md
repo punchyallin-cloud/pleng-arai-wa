@@ -1,10 +1,7 @@
-เพลงไรวะ V5 — Smart Answer
-- 1 รอบ 4 เพลง: Easy / Medium / Hard / Impossible
-- ฟัง 1.5 → 3 → 10 → 15 วินาที
-- segmented bar แบบ V4
-- แก้จำนวนเพลง/จำนวนขั้นให้ตรงกับโครงใหม่จริง
-- ตรวจคำตอบจาก “ชื่อเพลงหลัก” ไม่ยึด Track ID
-- Live / Acoustic / Remastered / Remix / Session / OST / feat. ฯลฯ ถูกตัดก่อนเทียบ
-- เพลงชื่อเดียวกันคนละเวอร์ชันจึงตอบชื่อหลักแล้วถือว่าถูก
-- dedupe เพลงซ้ำด้วยศิลปิน + ชื่อเพลงหลัก
-- ใช้ preview source เดิม ไม่ใช้ Spotify audio preview โดยตรง
+เพลงไรวะ V6
+- เหลือ segmented bar ด้านบนอันเดียว
+- ความยากอิง “เพลง”: เพลง 1 Easy, เพลง 2 Medium, เพลง 3 Hard, เพลง 4 Impossible
+- เวลาแต่ละเพลง: 1.5 → 3 → 10 → 15 วินาที
+- T-POP มี รวม / 4EVE / BUS / PiXXiE / LYKN / PROXIE / ATLAS / PERSES
+- autocomplete ไม่เฉลยง่าย: สุ่มหลาย suggestion และเติมตัวหลอกเมื่อผลค้นหาน้อย
+- Smart Answer จาก V5 ยังอยู่: เพลงชื่อหลักเดียวกันคนละ version ถือว่าตอบถูก
