@@ -29,11 +29,13 @@ h2 span,.pink{color:#ff83c6}
 #loading{padding:120px 0}
 .score{background:#221229;border:1px solid #ffffff16;border-radius:14px;padding:9px 12px}
 .top-row h2{margin-bottom:8px}
-.difficulty-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:18px 0 13px}
+.difficulty-strip{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin:18px 0 13px}
 .difficulty-pill{height:42px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:850;font-size:14px;color:#8f8499;background:#17121c;border:1px solid rgba(255,255,255,.08)}
 .difficulty-pill.easy.active{color:#07140c;background:#2fe77d;box-shadow:0 0 22px rgba(47,231,125,.22)}
+.difficulty-pill.normal.active{color:#06131a;background:#63d7ff;box-shadow:0 0 22px rgba(99,215,255,.18)}
 .difficulty-pill.medium.active{color:#1a1300;background:#e8c64b;box-shadow:0 0 22px rgba(232,198,75,.18)}
 .difficulty-pill.hard.active{color:#200a06;background:#ff7b55;box-shadow:0 0 22px rgba(255,123,85,.18)}
+.difficulty-pill.expert.active{color:#1a0818;background:#ff6ed0;box-shadow:0 0 22px rgba(255,110,208,.18)}
 .difficulty-pill.impossible.active{color:#13051f;background:#b86cff;box-shadow:0 0 22px rgba(184,108,255,.20)}
 .difficulty-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;height:18px;padding:3px;border-radius:999px;background:#242128;border:1px solid rgba(255,255,255,.07);overflow:hidden}
 .difficulty-segment{display:block;border-radius:4px;background:#37333b}
@@ -83,4 +85,46 @@ pre{white-space:pre-wrap;background:#221229;border-radius:14px;padding:12px;colo
  #setup h2{font-size:34px}
  .play{width:125px;height:125px}
  .artist-grid{grid-template-columns:repeat(3,1fr)}
+}
+
+/* V8 control spacing */
+.answer-search{margin-top:22px;margin-bottom:16px}
+.submit-btn{margin-top:0}
+.skip-btn{margin-top:18px}
+.footer-row{margin-top:18px}
+
+/* Time bar: active segments accumulate as 1 → 3 → 5 → 10 sec unlocks */
+.difficulty-bar{margin-top:2px}
+.difficulty-segment{transition:background .22s ease,box-shadow .22s ease,transform .22s ease}
+.difficulty-segment.active{transform:translateY(-1px)}
+
+/* V9 six levels */
+.difficulty-strip{gap:5px}
+.difficulty-pill{font-size:11px;height:38px;padding:0 5px}
+
+/* Leaderboard */
+.leaderboard-open{margin-top:12px}
+.save-score-box{margin:18px 0;padding:14px;border:1px solid #ffffff14;border-radius:18px;background:#ffffff06}
+.save-score-box h3{margin:0 0 12px;font-size:15px}
+.save-score-box input{width:100%;height:48px;margin:7px 0;border:1px solid #ffffff16;border-radius:14px;background:#1b1020;color:#fff;padding:0 13px;outline:none}
+.save-score-box .primary{margin-top:8px}
+.leaderboard-modal{text-align:left}
+.leaderboard-head{display:flex;justify-content:space-between;align-items:center}
+.leaderboard-head h2{margin:5px 0 0}
+.icon-btn{width:42px;height:42px;border-radius:13px;border:1px solid #ffffff18;background:#ffffff08;color:#fff}
+.leaderboard-tabs{display:flex;gap:8px;margin:18px 0 12px}
+.lb-tab{border:1px solid #ffffff16;background:#1b1020;color:#cbbbd1;border-radius:999px;padding:9px 13px;font-weight:800}
+.lb-tab.active{background:#ff59aa;color:#1a0712;border-color:transparent}
+.leaderboard-list{display:grid;gap:8px;max-height:55vh;overflow:auto}
+.lb-row{display:grid;grid-template-columns:46px 1fr auto;gap:10px;align-items:center;padding:11px;border:1px solid #ffffff10;border-radius:14px;background:#ffffff05}
+.lb-row.clickable{cursor:pointer}
+.lb-rank{font-weight:900;text-align:center}
+.lb-info b,.lb-info small{display:block}
+.lb-info small{color:#a993b1;margin-top:3px}
+.lb-score{color:#ff83c6;font-size:17px}
+.lb-empty{text-align:center;color:#b9a7c0;padding:28px 10px}
+
+@media(max-width:420px){
+ .difficulty-pill{font-size:9px}
+ .difficulty-strip{gap:3px}
 }

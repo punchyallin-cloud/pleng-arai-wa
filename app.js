@@ -1,24 +1,29 @@
 const C={
-  rounds:4,
-  steps:[1.5,3,10,15],
+  rounds:6,
+  steps:[1,3,5,10],
   artists:{
     "ฮิตไทย":["Three Man Down","Tilly Birds","NONT TANONT","INK WARUNTORN","Jeff Satur","BOWKYLION","Cocktail","bodyslam","Potato","Klear","Getsunova","Polycat","Musketeers","The TOYS","MEYOU","fellow fellow","Only Monday","Tattoo Colour","PALMY","Atom Chanakan","Pop Pongkool","Billkin","PP Krit","Mirrr","PURPEECH","PUN","YOUNGOHM","F.HERO","Slot Machine","Lipta","Scrubb","Lomosonic","Num Kala"],
     "T-POP":["4EVE","BUS because of you i shine","PiXXiE","LYKN","PROXIE","ATLAS","PERSES","DICE","BNK48","VIIS","TRINITY","bamm","PRETZELLE","QRRA","MXFRUIT","LAZ1"],
     "2000s":["bodyslam","Potato","Clash","Big Ass","Da Endorphine","Klear","Tattoo Colour","PALMY","Silly Fools","Mild","Calories Blah Blah","Lomosonic","Zeal","Retrospect","Sweet Mullet","Paradox","Lipta","Scrubb"],
     "ลูกทุ่ง":["มนต์แคน แก่นคูน","ลำไย ไหทองคำ","ก้อง ห้วยไร่","ต่าย อรทัย","ไผ่ พงศธร","ศิริพร อำไพพงษ์","เบิ้ล ปทุมราช","จินตหรา พูนลาภ","หญิงลี ศรีจุมพล","ตรี ชัยณรงค์","แซ็ค ชุมแพ","เนสกาแฟ ศรีนคร"],
     "อินดี้":["Safeplanet","Whal & Dolph","Yew","Dept","PURPEECH","Mirrr","HYBS","Tilly Birds","Polycat","LANDOKMAI","Anatomy Rabbit","Moving and Cut","WANYAi","Loserpop","H3F","Rocketman"],
-    "สุ่มทั้งหมด":["Three Man Down","Tilly Birds","NONT TANONT","INK WARUNTORN","BOWKYLION","Cocktail","bodyslam","4EVE","BUS because of you i shine","LYKN","PROXIE","PiXXiE","ATLAS","PERSES","Potato","PALMY","Tattoo Colour","Only Monday","fellow fellow","PUN","YOUNGOHM","Safeplanet","Whal & Dolph","Lipta","Scrubb","Slot Machine"]
+    "แร็ปไทย":["YOUNGOHM","YOUNGGU","DIAMOND MQT","Z9","YOUNGTA","DIEHEART","1MILL","SPRITE","AUTTA","F.HERO","DABOYWAY","P6ICK","2Ectasy","OG-ANIC","LAZYLOXY","MAIYARAP","URBOYTJ","SARAN","BLACKSHEEP","MILLI"],
+"Kamikaze":["FFK","K-OTIC","Four-Mod","Neko Jump","Waii","Knomjean","Mila","Siska","3.2.1","SWEE:D","Timethai","XIS","Kamikaze"],
+    "สุ่มทั้งหมด":["Three Man Down","Tilly Birds","NONT TANONT","INK WARUNTORN","BOWKYLION","Cocktail","bodyslam","4EVE","BUS because of you i shine","LYKN","PROXIE","PiXXiE","ATLAS","PERSES","Potato","PALMY","Tattoo Colour","Only Monday","fellow fellow","PUN","YOUNGOHM","YOUNGGU","DIAMOND MQT","Z9","1MILL","SPRITE","AUTTA","Safeplanet","Whal & Dolph","Lipta","Scrubb","Slot Machine"]
   }
 };
 
 const LEVELS=[
   {name:"Easy",cls:"easy"},
+  {name:"Normal",cls:"normal"},
   {name:"Medium",cls:"medium"},
   {name:"Hard",cls:"hard"},
+  {name:"Expert",cls:"expert"},
   {name:"Impossible",cls:"impossible"}
 ];
 
 const TPOP=C.artists["T-POP"];
+const RAP=C.artists["แร็ปไทย"];
 const $=x=>document.getElementById(x);
 const E={
  setup:$("setup"),loading:$("loading"),game:$("game"),start:$("start"),modes:$("modes"),
@@ -27,11 +32,11 @@ const E={
  round:$("round"),remain:$("remain"),msg:$("msg"),result:$("result"),okIcon:$("okIcon"),
  okText:$("okText"),art:$("art"),title:$("title"),artist:$("artist"),gain:$("gain"),
  apple:$("apple"),next:$("next"),finish:$("finish"),final:$("final"),share:$("share"),
- again:$("again"),copy:$("copy"),home:$("home"),mute:$("mute"),artistFilters:$("artistFilters"),
- artistGrid:$("artistGrid"),listenText:$("listenText"),difficultyNow:$("difficultyNow")
+ again:$("again"),copy:$("copy"),home:$("home"),mute:$("mute"),openLeaderboard:$("openLeaderboard"),viewLeaderboard:$("viewLeaderboard"),leaderboard:$("leaderboard"),leaderboardList:$("leaderboardList"),closeLeaderboard:$("closeLeaderboard"),playerName:$("playerName"),playerIG:$("playerIG"),saveScore:$("saveScore"),playerIdText:$("playerIdText"),artistFilters:$("artistFilters"),
+ artistGrid:$("artistGrid"),artistPanelTitle:$("artistPanelTitle"),listenText:$("listenText"),difficultyNow:$("difficultyNow")
 };
 
-let mode="ฮิตไทย", artistFilter="ALL", pool=[], buckets=[[],[],[],[]], list=[];
+let mode="ฮิตไทย", artistFilter="ALL", pool=[], buckets=[[],[],[],[],[],[]], list=[];
 let r=0, step=0, score=0, audio=null, timer=null, muted=false, selected=null, searchTimer=null;
 
 function jsonp(term,limit=60){
@@ -112,9 +117,11 @@ function splitDepth(rows){
  const d=dedupe(rows);
  return [
   d.slice(0,2),
-  d.slice(2,5),
-  d.slice(5,9),
-  d.slice(9,18)
+  d.slice(2,4),
+  d.slice(4,7),
+  d.slice(7,10),
+  d.slice(10,14),
+  d.slice(14,24)
  ];
 }
 
@@ -124,15 +131,15 @@ async function fetchArtist(wanted){
   const rows=clean(d.results).filter(x=>artistMatches(x.artist,wanted));
   return splitDepth(rows);
  }catch(e){
-  return [[],[],[],[]];
+  return [[],[],[],[],[],[]];
  }
 }
 
 async function build(){
  E.lt.textContent="กำลังคัดเพลงจากง่ายไปยาก…";
- pool=[];buckets=[[],[],[],[]];
+ pool=[];buckets=[[],[],[],[],[],[]];
 
- const artists=(mode==="T-POP"&&artistFilter!=="ALL")
+ const artists=((mode==="T-POP"||mode==="แร็ปไทย")&&artistFilter!=="ALL")
    ? [artistFilter]
    : (C.artists[mode]||C.artists["ฮิตไทย"]);
 
@@ -151,13 +158,11 @@ async function build(){
 
  // Fallback: if a deep bucket is too small, borrow from the next nearest pool,
  // but keep Easy biased to early results and Impossible biased to deeper results.
- for(let i=0;i<4;i++){
+ for(let i=0;i<6;i++){
   if(buckets[i].length<3){
-   const fallback=i===0?pool.slice(0,Math.max(8,pool.length/4)):
-                  i===1?pool.slice(Math.floor(pool.length*.15),Math.floor(pool.length*.55)):
-                  i===2?pool.slice(Math.floor(pool.length*.35),Math.floor(pool.length*.80)):
-                        pool.slice(Math.floor(pool.length*.55));
-   buckets[i]=dedupe([...buckets[i],...fallback]);
+   const start=Math.floor(pool.length*(i/7));
+   const end=Math.max(start+6,Math.floor(pool.length*((i+2)/7)));
+   buckets[i]=dedupe([...buckets[i],...pool.slice(start,end)]);
   }
  }
 
@@ -167,10 +172,10 @@ async function build(){
 function chooseDifficultyList(){
  const chosen=[],usedTitles=new Set(),usedArtists=new Set();
 
- for(let level=0;level<4;level++){
+ for(let level=0;level<6;level++){
   let candidates=shuffle(buckets[level]).filter(x=>!usedTitles.has(answerKey(x.title)));
   // In mixed modes, prefer different artists across the four songs.
-  if(!(mode==="T-POP"&&artistFilter!=="ALL")){
+  if(!((mode==="T-POP"||mode==="แร็ปไทย")&&artistFilter!=="ALL")){
    const fresh=candidates.filter(x=>!usedArtists.has(answerKey(x.artist)));
    if(fresh.length) candidates=fresh;
   }
@@ -192,7 +197,7 @@ async function start(){
   list=chooseDifficultyList();
   r=0;step=0;score=0;
   E.score.textContent=0;
-  E.ml.textContent=mode==="T-POP"&&artistFilter!=="ALL" ? `T-POP · ${shortArtist(artistFilter)}` : mode;
+  E.ml.textContent=((mode==="T-POP"||mode==="แร็ปไทย")&&artistFilter!=="ALL") ? `${mode} · ${shortArtist(artistFilter)}` : mode;
   E.loading.classList.add("hidden");
   E.game.classList.remove("hidden");
   load();
@@ -213,14 +218,20 @@ function stop(){
 }
 
 function updateDifficultyUI(){
- const idx=Math.min(r,3);
+ const idx=Math.min(r,5);
  document.querySelectorAll(".difficulty-pill").forEach((el,i)=>el.classList.toggle("active",i===idx));
- document.querySelectorAll(".difficulty-segment").forEach((el,i)=>el.classList.toggle("active",i===idx));
  E.difficultyNow.textContent=LEVELS[idx].name;
  E.round.textContent=idx+1;
 }
 
+function updateTimeBar(){
+ document.querySelectorAll(".difficulty-segment").forEach((el,i)=>{
+  el.classList.toggle("active",i<=step);
+ });
+}
+
 function updateListenUI(){
+ updateTimeBar();
  E.sec.textContent=C.steps[step];
  E.listenText.textContent=`ฟัง ${C.steps[step]} วินาที`;
  E.remain.textContent=step===C.steps.length-1 ? "ฟังเต็มสุดแล้ว" : `ฟังเพิ่มได้อีก ${C.steps.length-1-step} ครั้ง`;
@@ -279,7 +290,8 @@ function skip(){
 
 function show(ok){
  stop();
- const pts=ok?Math.max(200,1000-step*180):0;
+ const pointTable=[1200,900,650,400];
+ const pts=ok?pointTable[step]:0;
  if(ok)score+=pts;
  E.score.textContent=score;
  E.okIcon.textContent=ok?"✓":"✕";
@@ -305,8 +317,8 @@ function finish(){
  stop();
  E.game.classList.add("hidden");
  E.final.textContent=score;
- const label=mode==="T-POP"&&artistFilter!=="ALL"?`T-POP · ${shortArtist(artistFilter)}`:mode;
- E.share.textContent=`เพลงไรวะ 🎧\n${label}\n${score} คะแนน / 4 เพลง`;
+ const label=((mode==="T-POP"||mode==="แร็ปไทย")&&artistFilter!=="ALL")?`${mode} · ${shortArtist(artistFilter)}`:mode;
+ E.share.textContent=`เพลงไรวะ 🎧\n${label}\n${score} คะแนน / 6 เพลง`;
  E.finish.classList.remove("hidden");
 }
 
@@ -327,7 +339,7 @@ async function search(q){
  try{
   const d=await jsonp(q,40);
   let extra=clean(d.results);
-  const allowed=(mode==="T-POP"&&artistFilter!=="ALL")?[artistFilter]:(C.artists[mode]||Object.values(C.artists).flat());
+  const allowed=((mode==="T-POP"||mode==="แร็ปไทย")&&artistFilter!=="ALL")?[artistFilter]:(C.artists[mode]||Object.values(C.artists).flat());
   extra=extra.filter(x=>allowed.some(a=>artistMatches(x.artist,a)));
   candidates.push(...extra);
  }catch(e){}
@@ -338,7 +350,7 @@ async function search(q){
  // always mix in same-mode decoys and randomize order.
  const used=new Set(candidates.map(x=>x.id));
  let decoys=shuffle(pool).filter(x=>!used.has(x.id));
- if(mode==="T-POP"&&artistFilter!=="ALL"){
+ if((mode==="T-POP"||mode==="แร็ปไทย")&&artistFilter!=="ALL"){
   const sameArtist=decoys.filter(x=>artistMatches(x.artist,artistFilter));
   if(sameArtist.length)decoys=sameArtist;
  }
@@ -373,7 +385,8 @@ function shortArtist(a){
 
 function renderArtistCards(){
  E.artistGrid.innerHTML="";
- const all=["ALL",...TPOP];
+ const source=mode==="แร็ปไทย"?RAP:TPOP;
+ const all=["ALL",...source];
  all.forEach(a=>{
   const b=document.createElement("button");
   b.type="button";
@@ -402,16 +415,87 @@ async function loadArtistArtwork(artist,button,placeholder){
 }
 
 function syncArtistFilters(){
- E.artistFilters.classList.toggle("hidden",mode!=="T-POP");
- if(mode==="T-POP")renderArtistCards();
+ const show=mode==="T-POP"||mode==="แร็ปไทย";
+ E.artistFilters.classList.toggle("hidden",!show);
+ if(show){
+  E.artistPanelTitle.textContent=mode==="แร็ปไทย"?"เลือกศิลปินแร็ปไทย":"เลือกวง T-POP";
+  renderArtistCards();
+ }
 }
+
+
+const LB_KEY="plengraiwa_leaderboard_v1";
+const PLAYER_KEY="plengraiwa_player_id";
+
+function getPlayerId(){
+ let id=localStorage.getItem(PLAYER_KEY);
+ if(!id){
+  id="P"+Math.random().toString(36).slice(2,8).toUpperCase();
+  localStorage.setItem(PLAYER_KEY,id);
+ }
+ return id;
+}
+function getLeaderboard(){
+ try{return JSON.parse(localStorage.getItem(LB_KEY)||"[]")}catch{return[]}
+}
+function setLeaderboard(rows){
+ localStorage.setItem(LB_KEY,JSON.stringify(rows.slice(0,100)));
+}
+function sanitizeIG(v){
+ return (v||"").trim().replace(/^@+/,"").replace(/[^a-zA-Z0-9._]/g,"").slice(0,30);
+}
+function saveCurrentScore(){
+ const name=(E.playerName.value||"").trim().slice(0,24);
+ if(!name){E.playerName.focus();return}
+ const ig=sanitizeIG(E.playerIG.value),playerId=getPlayerId();
+ const row={playerId,name,ig,score,mode,artist:(artistFilter!=="ALL"?shortArtist(artistFilter):""),createdAt:Date.now()};
+ let rows=getLeaderboard().filter(x=>x.playerId!==playerId || x.score>score);
+ rows.push(row); rows.sort((a,b)=>b.score-a.score || a.createdAt-b.createdAt);
+ setLeaderboard(rows);
+ E.playerIdText.textContent=`Player ID: ${playerId} · บันทึกแล้ว ✓`;
+ renderLeaderboard("all");
+}
+function openLeaderboard(filter="all"){
+ E.leaderboard.classList.remove("hidden");renderLeaderboard(filter);
+}
+function closeLeaderboard(){E.leaderboard.classList.add("hidden")}
+function renderLeaderboard(filter="all"){
+ const now=new Date(),startToday=new Date(now.getFullYear(),now.getMonth(),now.getDate()).getTime();
+ let rows=getLeaderboard();
+ if(filter==="today")rows=rows.filter(x=>x.createdAt>=startToday);
+ rows.sort((a,b)=>b.score-a.score || a.createdAt-b.createdAt);
+ E.leaderboardList.innerHTML="";
+ if(!rows.length){
+  E.leaderboardList.innerHTML='<div class="lb-empty">ยังไม่มีคะแนน — มาเป็นอันดับ 1 คนแรก 😎</div>';return;
+ }
+ rows.slice(0,50).forEach((x,i)=>{
+  const item=document.createElement("div");item.className="lb-row";
+  const rank=document.createElement("div");rank.className="lb-rank";rank.textContent=i<3?["🥇","🥈","🥉"][i]:String(i+1);
+  const info=document.createElement("div");info.className="lb-info";
+  const n=document.createElement("b");n.textContent=x.name;
+  const sub=document.createElement("small");sub.textContent=[x.ig?`@${x.ig}`:"",x.mode,x.artist].filter(Boolean).join(" · ");
+  info.append(n,sub);
+  const sc=document.createElement("strong");sc.className="lb-score";sc.textContent=x.score.toLocaleString();
+  item.append(rank,info,sc);
+  if(x.ig){item.classList.add("clickable");item.onclick=()=>window.open(`https://instagram.com/${x.ig}`,"_blank","noopener")}
+  E.leaderboardList.appendChild(item);
+ });
+}
+document.querySelectorAll(".lb-tab").forEach(btn=>{
+ btn.onclick=()=>{
+  document.querySelectorAll(".lb-tab").forEach(x=>x.classList.remove("active"));
+  btn.classList.add("active");renderLeaderboard(btn.dataset.filter||"all");
+ };
+});
 
 E.modes.onclick=e=>{
  const b=e.target.closest(".mode");if(!b)return;
  document.querySelectorAll(".mode").forEach(x=>x.classList.remove("active"));
  b.classList.add("active");
+ const oldMode=mode;
  mode=b.dataset.mode;
- if(mode!=="T-POP")artistFilter="ALL";
+ if(mode!=="T-POP"&&mode!=="แร็ปไทย")artistFilter="ALL";
+ if((oldMode==="T-POP"&&mode==="แร็ปไทย")||(oldMode==="แร็ปไทย"&&mode==="T-POP"))artistFilter="ALL";
  syncArtistFilters();
 };
 
@@ -437,3 +521,9 @@ E.copy.onclick=async()=>{
 };
 
 syncArtistFilters();
+
+if(E.openLeaderboard)E.openLeaderboard.onclick=()=>openLeaderboard("all");
+if(E.viewLeaderboard)E.viewLeaderboard.onclick=()=>openLeaderboard("all");
+if(E.closeLeaderboard)E.closeLeaderboard.onclick=closeLeaderboard;
+if(E.saveScore)E.saveScore.onclick=saveCurrentScore;
+if(E.playerIdText)E.playerIdText.textContent=`Player ID: ${getPlayerId()}`;

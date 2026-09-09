@@ -21,7 +21,7 @@
   <section id="setup">
     <div class="tag">🇹🇭 THAI SONG GUESS</div>
     <h2><span>1.5 วิ</span><br>รู้มั้ยเพลงอะไร?</h2>
-    <p>เลือกหมวด แล้วมาลองทาย 4 เพลงจากง่ายไปโหด</p>
+    <p>เลือกหมวด แล้วมาลองทาย 6 เพลงจากง่ายไปโหด</p>
 
     <div id="modes" class="modes">
       <button class="mode active" data-mode="ฮิตไทย">🔥 เพลงฮิตไทย</button>
@@ -33,11 +33,12 @@
     </div>
 
     <div id="artistFilters" class="artist-panel hidden">
-      <div class="artist-panel-title">เลือกวง T-POP</div>
+      <div class="artist-panel-title" id="artistPanelTitle">เลือกศิลปิน</div>
       <div id="artistGrid" class="artist-grid"></div>
     </div>
 
-    <button class="primary big" id="start">เริ่มเกม 4 เพลง</button>
+    <button class="primary big" id="start">เริ่มเกม 6 เพลง</button>
+<button class="secondary leaderboard-open" id="openLeaderboard">🏆 Leaderboard</button>
     <p class="tiny">ใช้เฉพาะเพลงที่มีตัวอย่างเสียงจากแคตตาล็อกภายนอก</p>
   </section>
 
@@ -58,13 +59,15 @@
 
     <div class="difficulty-strip" aria-label="ระดับความยาก">
       <div class="difficulty-pill easy active">Easy</div>
+      <div class="difficulty-pill normal">Normal</div>
       <div class="difficulty-pill medium">Medium</div>
       <div class="difficulty-pill hard">Hard</div>
+      <div class="difficulty-pill expert">Expert</div>
       <div class="difficulty-pill impossible">Impossible</div>
     </div>
 
-    <!-- มีบาร์เดียว: บอกว่าตอนนี้อยู่เพลงระดับไหน -->
-    <div class="difficulty-bar" aria-label="ตำแหน่งระดับเพลง">
+    <!-- มีบาร์เดียว: ขยับตามเวลาที่ปลดล็อก 1 / 3 / 5 / 10 วินาที -->
+    <div class="difficulty-bar" aria-label="เวลาที่ปลดล็อก">
       <span class="difficulty-segment active"></span>
       <span class="difficulty-segment"></span>
       <span class="difficulty-segment"></span>
@@ -78,16 +81,16 @@
     <button id="play" class="play">▶</button>
     <p id="audioState" class="center small">กด Play แล้วทายเลย</p>
 
-    <div class="search">
+    <div class="search answer-search">
       <input id="answer" placeholder="ค้นหาชื่อเพลง หรือ ศิลปิน…" autocomplete="off">
       <div id="suggestions" class="suggestions"></div>
     </div>
 
-    <button id="submit" class="primary">ตอบคำถาม</button>
-    <button id="skip" class="secondary">⏭ ไม่รู้ / ฟังเพิ่ม</button>
+    <button id="submit" class="primary submit-btn">ตอบคำถาม</button>
+    <button id="skip" class="secondary skip-btn">⏭ ไม่รู้ / ฟังเพิ่ม</button>
 
     <div class="row small footer-row">
-      <span>เพลงที่ <b id="round">1</b> / 4</span>
+      <span>เพลงที่ <b id="round">1</b> / 6</span>
       <span id="remain"></span>
     </div>
     <p id="msg" class="center small pink"></p>
@@ -114,8 +117,36 @@
     <h2>มึงรู้เพลงไทยแค่ไหน?</h2>
     <div id="final" class="final"></div>
     <pre id="share"></pre>
+
+    <div class="save-score-box">
+      <h3>บันทึกคะแนนขึ้น Leaderboard</h3>
+      <input id="playerName" placeholder="ชื่อในเกม" maxlength="24">
+      <input id="playerIG" placeholder="@Instagram (ไม่บังคับ)" maxlength="40">
+      <button id="saveScore" class="primary">บันทึกคะแนน</button>
+      <p id="playerIdText" class="tiny"></p>
+    </div>
+
     <button id="again" class="primary">เล่นอีกรอบ</button>
     <button id="copy" class="secondary">คัดลอกผล</button>
+    <button id="viewLeaderboard" class="secondary">🏆 ดู Leaderboard</button>
+  </div>
+</div>
+
+<div id="leaderboard" class="overlay hidden">
+  <div class="modal leaderboard-modal">
+    <div class="leaderboard-head">
+      <div>
+        <div class="tag">PLENG RAI WA?</div>
+        <h2>🏆 Leaderboard</h2>
+      </div>
+      <button id="closeLeaderboard" class="icon-btn">✕</button>
+    </div>
+    <div class="leaderboard-tabs">
+      <button class="lb-tab active" data-filter="all">All Time</button>
+      <button class="lb-tab" data-filter="today">วันนี้</button>
+    </div>
+    <div id="leaderboardList" class="leaderboard-list"></div>
+    <p class="tiny">เวอร์ชันทดสอบนี้เก็บอันดับในอุปกรณ์นี้ก่อน</p>
   </div>
 </div>
 
