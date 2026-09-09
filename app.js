@@ -45,7 +45,7 @@ function jsonp(term,limit=60){
   const cb="__prw"+Date.now()+Math.random().toString(36).slice(2);
   const s=document.createElement("script");
   let finished=false;
-  const t=setTimeout(()=>done(new Error("timeout")),15000);
+  const t=setTimeout(()=>done(new Error("timeout")),20000);
   function done(e,d){
    if(finished)return;
    finished=true;
@@ -148,47 +148,43 @@ async function fetchArtist(wanted){
 }
 
 async function build(){
- E.lt.textContent="กำลังเตรียมเพลงให้พร้อมบนมือถือ…";
+ E.lt.textContent="กำลังเตรียมเพลง…";
  pool=[];buckets=[[],[],[],[],[],[]];
 
  let artists=((mode==="T-POP"||mode==="แร็ปไทย"||mode==="Kamikaze")&&artistFilter!=="ALL")
    ? [artistFilter]
-   : (C.artists[mode]||C.artists["ฮิตไทย"]);
+   : shuffle([...(C.artists[mode]||C.artists["ฮิตไทย"])]);
 
- // มือถือไม่ยิง request เยอะเกินไปพร้อมกัน
- if(artists.length>15)artists=shuffle(artists).slice(0,15);
-
- for(let i=0;i<artists.length;i+=3){
-  const batch=artists.slice(i,i+3);
-  const results=await Promise.all(batch.map(fetchArtist));
-  results.forEach(parts=>{
-   parts.forEach((rows,idx)=>buckets[idx].push(...rows));
-   parts.forEach(rows=>pool.push(...rows));
-  });
-  // ถ้ามีเพลงเยอะพอแล้ว ไม่ต้องยิง API ต่อทั้งลิสต์
-  if(pool.length>=70 && i>=5)break;
- }
-
- buckets=buckets.map(dedupe);
- pool=dedupe(pool);
-
- // ถ้าเลือก "รวม" แล้วผลน้อย ให้ลองศิลปินหลักอีกชุดหนึ่ง
- if(pool.length<6 && artistFilter==="ALL"){
-  const fallback=(C.artists[mode]||C.artists["ฮิตไทย"]).slice(0,8);
-  const results=await Promise.all(fallback.map(fetchArtist));
-  results.forEach(parts=>{
-   parts.forEach((rows,idx)=>buckets[idx].push(...rows));
-   parts.forEach(rows=>pool.push(...rows));
-  });
-  buckets=buckets.map(dedupe);
+ // Safari/iPhone: โหลดทีละศิลปิน ไม่ยิงหลาย request พร้อมกัน
+ const maxArtists=artistFilter!=="ALL"?1:Math.min(artists.length,12);
+ for(let i=0;i<maxArtists;i++){
+  E.lt.textContent=`กำลังเตรียมเพลง… ${i+1}/${maxArtists}`;
+  const parts=await fetchArtist(artists[i]);
+  parts.forEach((rows,idx)=>buckets[idx].push(...rows));
+  parts.forEach(rows=>pool.push(...rows));
   pool=dedupe(pool);
+  buckets=buckets.map(dedupe);
+
+  // มีตัวเลือกพอสำหรับสุ่ม 6 เพลงแล้วให้เริ่มได้ทันที
+  if(pool.length>=18 && i>=2)break;
+  await new Promise(r=>setTimeout(r,120));
  }
 
- // เติมแต่ละระดับจาก pool กลางเมื่อ bucket ลึกมีเพลงน้อย
- for(let i=0;i<6;i++){
-  if(buckets[i].length<2){
-   const from=Math.min(pool.length,Math.floor(pool.length*(i/8)));
-   buckets[i]=dedupe([...buckets[i],...pool.slice(from),...pool]);
+ // ถ้าโหมดแยกศิลปินมี preview ไม่ครบ 6 เพลง ให้ค้นคำกว้างของศิลปินอีกครั้ง
+ if(pool.length<6 && artistFilter!=="ALL"){
+  try{
+   const d=await jsonp(artistFilter+" song",50);
+   pool=dedupe([...pool,...clean(d.results).filter(x=>artistMatches(x.artist,artistFilter))]);
+  }catch(e){}
+ }
+
+ // เติมระดับความยากจากตำแหน่งใน pool เพื่อไม่ให้ระดับลึกว่าง
+ if(pool.length>=6){
+  const ordered=pool.slice();
+  for(let level=0;level<6;level++){
+   const a=Math.floor(ordered.length*(level/7));
+   const b=Math.max(a+4,Math.floor(ordered.length*((level+2)/7)));
+   buckets[level]=dedupe([...buckets[level],...ordered.slice(a,b),...ordered]);
   }
  }
 
@@ -231,7 +227,7 @@ async function start(){
   console.error(e);
   E.loading.classList.add("hidden");
   E.setup.classList.remove("hidden");
-  alert("ยังเตรียมเพลงไม่สำเร็จ ลองกดเริ่มใหม่อีกครั้ง หรือเปลี่ยนหมวดเพลง");
+  alert("หมวดนี้หาเพลงตัวอย่างได้ไม่ครบ 6 เพลง ลองเลือก “รวม” หรือหมวดอื่นก่อน");
  }
 }
 
