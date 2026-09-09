@@ -24,6 +24,7 @@ const LEVELS=[
 
 const TPOP=C.artists["T-POP"];
 const RAP=C.artists["แร็ปไทย"];
+const KAMIKAZE=C.artists["Kamikaze"];
 const $=x=>document.getElementById(x);
 const E={
  setup:$("setup"),loading:$("loading"),game:$("game"),start:$("start"),modes:$("modes"),
@@ -139,7 +140,7 @@ async function build(){
  E.lt.textContent="กำลังคัดเพลงจากง่ายไปยาก…";
  pool=[];buckets=[[],[],[],[],[],[]];
 
- const artists=((mode==="T-POP"||mode==="แร็ปไทย")&&artistFilter!=="ALL")
+ const artists=((mode==="T-POP"||mode==="แร็ปไทย"||mode==="Kamikaze")&&artistFilter!=="ALL")
    ? [artistFilter]
    : (C.artists[mode]||C.artists["ฮิตไทย"]);
 
@@ -175,7 +176,7 @@ function chooseDifficultyList(){
  for(let level=0;level<6;level++){
   let candidates=shuffle(buckets[level]).filter(x=>!usedTitles.has(answerKey(x.title)));
   // In mixed modes, prefer different artists across the four songs.
-  if(!((mode==="T-POP"||mode==="แร็ปไทย")&&artistFilter!=="ALL")){
+  if(!((mode==="T-POP"||mode==="แร็ปไทย"||mode==="Kamikaze")&&artistFilter!=="ALL")){
    const fresh=candidates.filter(x=>!usedArtists.has(answerKey(x.artist)));
    if(fresh.length) candidates=fresh;
   }
@@ -197,7 +198,7 @@ async function start(){
   list=chooseDifficultyList();
   r=0;step=0;score=0;
   E.score.textContent=0;
-  E.ml.textContent=((mode==="T-POP"||mode==="แร็ปไทย")&&artistFilter!=="ALL") ? `${mode} · ${shortArtist(artistFilter)}` : mode;
+  E.ml.textContent=((mode==="T-POP"||mode==="แร็ปไทย"||mode==="Kamikaze")&&artistFilter!=="ALL") ? `${mode} · ${shortArtist(artistFilter)}` : mode;
   E.loading.classList.add("hidden");
   E.game.classList.remove("hidden");
   load();
@@ -317,7 +318,7 @@ function finish(){
  stop();
  E.game.classList.add("hidden");
  E.final.textContent=score;
- const label=((mode==="T-POP"||mode==="แร็ปไทย")&&artistFilter!=="ALL")?`${mode} · ${shortArtist(artistFilter)}`:mode;
+ const label=((mode==="T-POP"||mode==="แร็ปไทย"||mode==="Kamikaze")&&artistFilter!=="ALL")?`${mode} · ${shortArtist(artistFilter)}`:mode;
  E.share.textContent=`เพลงไรวะ 🎧\n${label}\n${score} คะแนน / 6 เพลง`;
  E.finish.classList.remove("hidden");
 }
@@ -339,7 +340,7 @@ async function search(q){
  try{
   const d=await jsonp(q,40);
   let extra=clean(d.results);
-  const allowed=((mode==="T-POP"||mode==="แร็ปไทย")&&artistFilter!=="ALL")?[artistFilter]:(C.artists[mode]||Object.values(C.artists).flat());
+  const allowed=((mode==="T-POP"||mode==="แร็ปไทย"||mode==="Kamikaze")&&artistFilter!=="ALL")?[artistFilter]:(C.artists[mode]||Object.values(C.artists).flat());
   extra=extra.filter(x=>allowed.some(a=>artistMatches(x.artist,a)));
   candidates.push(...extra);
  }catch(e){}
@@ -350,7 +351,7 @@ async function search(q){
  // always mix in same-mode decoys and randomize order.
  const used=new Set(candidates.map(x=>x.id));
  let decoys=shuffle(pool).filter(x=>!used.has(x.id));
- if((mode==="T-POP"||mode==="แร็ปไทย")&&artistFilter!=="ALL"){
+ if((mode==="T-POP"||mode==="แร็ปไทย"||mode==="Kamikaze")&&artistFilter!=="ALL"){
   const sameArtist=decoys.filter(x=>artistMatches(x.artist,artistFilter));
   if(sameArtist.length)decoys=sameArtist;
  }
@@ -385,7 +386,7 @@ function shortArtist(a){
 
 function renderArtistCards(){
  E.artistGrid.innerHTML="";
- const source=mode==="แร็ปไทย"?RAP:TPOP;
+ const source=mode==="แร็ปไทย"?RAP:(mode==="Kamikaze"?KAMIKAZE:TPOP);
  const all=["ALL",...source];
  all.forEach(a=>{
   const b=document.createElement("button");
@@ -415,10 +416,10 @@ async function loadArtistArtwork(artist,button,placeholder){
 }
 
 function syncArtistFilters(){
- const show=mode==="T-POP"||mode==="แร็ปไทย";
+ const show=mode==="T-POP"||mode==="แร็ปไทย"||mode==="Kamikaze";
  E.artistFilters.classList.toggle("hidden",!show);
  if(show){
-  E.artistPanelTitle.textContent=mode==="แร็ปไทย"?"เลือกศิลปินแร็ปไทย":"เลือกวง T-POP";
+  E.artistPanelTitle.textContent=mode==="แร็ปไทย"?"เลือกศิลปินแร็ปไทย":(mode==="Kamikaze"?"เลือกศิลปิน Kamikaze":"เลือกวง T-POP");
   renderArtistCards();
  }
 }
@@ -494,7 +495,7 @@ E.modes.onclick=e=>{
  b.classList.add("active");
  const oldMode=mode;
  mode=b.dataset.mode;
- if(mode!=="T-POP"&&mode!=="แร็ปไทย")artistFilter="ALL";
+ if(mode!=="T-POP"&&mode!=="แร็ปไทย"&&mode!=="Kamikaze")artistFilter="ALL";
  if((oldMode==="T-POP"&&mode==="แร็ปไทย")||(oldMode==="แร็ปไทย"&&mode==="T-POP"))artistFilter="ALL";
  syncArtistFilters();
 };
