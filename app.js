@@ -39,42 +39,19 @@ const E={
 
 let mode="ฮิตไทย", artistFilter="ALL", pool=[], buckets=[[],[],[],[],[],[]], list=[];
 let r=0, step=0, score=0, audio=null, timer=null, muted=false, selected=null, searchTimer=null;
+let catalogTracks=[], catalogReady=false;
 
-function jsonp(term,limit=60){
- return new Promise((res,rej)=>{
-  const cb="__prw"+Date.now()+Math.random().toString(36).slice(2);
-  const s=document.createElement("script");
-  let finished=false;
-  const t=setTimeout(()=>done(new Error("timeout")),20000);
-  function done(e,d){
-   if(finished)return;
-   finished=true;
-   clearTimeout(t);
-   try{delete window[cb]}catch{}
-   try{s.remove()}catch{}
-   e?rej(e):res(d);
-  }
-  window[cb]=d=>done(null,d);
-  const p=new URLSearchParams({term,country:"TH",media:"music",entity:"song",limit:String(limit),callback:cb});
-  s.src="https://itunes.apple.com/search?"+p.toString();
-  s.async=true;
-  s.onerror=()=>done(new Error("network"));
-  document.body.appendChild(s);
- });
-}
 
-function clean(a){
- const m=new Map();
- (a||[]).forEach(x=>{
-  if(x.previewUrl&&x.trackName&&x.artistName&&!m.has(x.trackId)){
-   m.set(x.trackId,{
-    id:x.trackId,title:x.trackName,artist:x.artistName,preview:x.previewUrl,
-    art:(x.artworkUrl100||"").replace("100x100bb","500x500bb"),
-    url:x.trackViewUrl||""
-   });
-  }
- });
- return [...m.values()];
+async function loadLocalCatalog(){
+ if(catalogReady&&catalogTracks.length)return catalogTracks;
+ const res=await fetch("./catalog.json?v=100",{cache:"no-store"});
+ if(!res.ok)throw new Error("catalog missing");
+ const data=await res.json();
+ catalogTracks=Array.isArray(data)?data:(data.tracks||[]);
+ catalogTracks=catalogTracks.filter(x=>x.preview&&x.title&&x.artist);
+ catalogReady=catalogTracks.length>=6;
+ if(!catalogReady)throw new Error("catalog empty");
+ return catalogTracks;
 }
 
 function shuffle(a){
@@ -109,6 +86,7 @@ function artistMatches(trackArtist,wanted){
  };
  return (aliases[w]||[]).some(x=>a.includes(norm(x)));
 }
+
 function coreTitle(v){
  let s=(v||"").toLowerCase().normalize("NFKC");
  s=s.replace(/[“”‘’"'`]/g,"");
@@ -133,91 +111,56 @@ function dedupe(rows){
  return [...new Map(rows.map(x=>[answerKey(x.artist)+"|"+answerKey(x.title),x])).values()];
 }
 
-/* iTunes search order is used as a practical depth signal:
-   early results = more recognizable; deeper results = harder cuts. */
 function splitDepth(rows){
- const d=dedupe(rows);
+ const d=dedupe(rows).sort((a,b)=>(a.rank??999)-(b.rank??999));
+ if(d.length<6)return [d,d,d,d,d,d];
+ const n=d.length;
  return [
-  d.slice(0,2),
-  d.slice(2,4),
-  d.slice(4,7),
-  d.slice(7,10),
-  d.slice(10,14),
-  d.slice(14,24)
+  d.slice(0,Math.max(3,Math.ceil(n*.18))),
+  d.slice(Math.floor(n*.12),Math.max(5,Math.ceil(n*.34))),
+  d.slice(Math.floor(n*.28),Math.max(6,Math.ceil(n*.52))),
+  d.slice(Math.floor(n*.46),Math.max(7,Math.ceil(n*.70))),
+  d.slice(Math.floor(n*.62),Math.max(8,Math.ceil(n*.86))),
+  d.slice(Math.floor(n*.76))
  ];
 }
 
-async function fetchArtist(wanted){
- const queries=[wanted,wanted+" song"];
- let all=[];
- for(let i=0;i<queries.length;i++){
-  try{
-   const d=await jsonp(queries[i],i?30:50);
-   const rows=clean(d.results);
-   const matched=rows.filter(x=>artistMatches(x.artist,wanted));
-   all=dedupe([...all,...matched,...rows]);
-   if(all.length>=8)break;
-  }catch(e){}
-  await new Promise(r=>setTimeout(r,180));
- }
- return splitDepth(all);
-}
 async function build(){
- E.lt.textContent="กำลังเตรียมเพลง…";
- pool=[];buckets=[[],[],[],[],[],[]];
+ E.lt.textContent="กำลังเปิดคลังเพลงบนเครื่อง…";
+ const all=await loadLocalCatalog();
 
- let artists=((mode==="T-POP"||mode==="แร็ปไทย"||mode==="Kamikaze")&&artistFilter!=="ALL")
-   ? [artistFilter]
-   : shuffle([...(C.artists[mode]||C.artists["ฮิตไทย"])]);
-
- const maxArtists=artistFilter!=="ALL"?1:Math.min(artists.length,6);
- for(let i=0;i<maxArtists;i++){
-  E.lt.textContent=`กำลังเตรียมเพลง… ${i+1}/${maxArtists}`;
-  const parts=await fetchArtist(artists[i]);
-  parts.forEach((rows,idx)=>buckets[idx].push(...rows));
-  parts.forEach(rows=>pool.push(...rows));
-  pool=dedupe(pool); buckets=buckets.map(dedupe);
-  if(pool.length>=24&&i>=1)break;
+ if(mode==="สุ่มทั้งหมด"){
+  pool=dedupe(all);
+ }else{
+  pool=dedupe(all.filter(x=>Array.isArray(x.modes)&&x.modes.includes(mode)));
  }
 
- if(pool.length<6){
-  const broad={"T-POP":"T-POP Thailand","แร็ปไทย":"Thai rap Thailand","Kamikaze":"Kamikaze Thailand","2000s":"Thai pop 2000","ลูกทุ่ง":"ลูกทุ่ง","อินดี้":"Thai indie","ฮิตไทย":"เพลงไทย"}[mode]||"เพลงไทย";
-  try{const d=await jsonp(broad,80);pool=dedupe([...pool,...clean(d.results)]);}catch(e){}
+ const locked=(mode==="T-POP"||mode==="แร็ปไทย"||mode==="Kamikaze")&&artistFilter!=="ALL";
+ if(locked){
+  const exact=pool.filter(x=>(Array.isArray(x.artistKeys)&&x.artistKeys.includes(artistFilter))||artistMatches(x.artist,artistFilter));
+  pool=dedupe(exact);
  }
 
- if(pool.length>=6){
-  const ordered=pool.slice();
-  for(let level=0;level<6;level++){
-   const a=Math.min(ordered.length-1,Math.floor(ordered.length*(level/7)));
-   const b=Math.min(ordered.length,Math.max(a+5,Math.floor(ordered.length*((level+2)/7))));
-   buckets[level]=dedupe([...buckets[level],...ordered.slice(a,b),...ordered]);
-  }
- }
- if(pool.length<6)throw new Error("not enough preview songs");
+ if(pool.length<6)throw new Error("catalog mode too small");
+ buckets=splitDepth(pool);
 }
+
 function chooseDifficultyList(){
  const chosen=[],usedTitles=new Set(),usedArtists=new Set();
- const locked=(mode==="T-POP"||mode==="แร็ปไทย"||mode==="Kamikaze")&&artistFilter!=="ALL";
  for(let level=0;level<6;level++){
   let candidates=shuffle(buckets[level]||[]).filter(x=>!usedTitles.has(answerKey(x.title)));
-  if(locked){
-   const exact=candidates.filter(x=>artistMatches(x.artist,artistFilter));
-   if(exact.length)candidates=exact;
-  }else{
-   const fresh=candidates.filter(x=>!usedArtists.has(answerKey(x.artist)));
-   if(fresh.length)candidates=fresh;
-  }
+  const fresh=candidates.filter(x=>!usedArtists.has(answerKey(x.artist)));
+  if(fresh.length)candidates=fresh;
   let pick=candidates[0];
-  if(!pick){
-   let f=shuffle(pool).filter(x=>!usedTitles.has(answerKey(x.title)));
-   if(locked){const exact=f.filter(x=>artistMatches(x.artist,artistFilter));if(exact.length)f=exact;}
-   pick=f[0];
-  }
+  if(!pick)pick=shuffle(pool).find(x=>!usedTitles.has(answerKey(x.title)));
   if(!pick)throw new Error("cannot choose six unique songs");
-  chosen.push(pick);usedTitles.add(answerKey(pick.title));usedArtists.add(answerKey(pick.artist));
+  chosen.push(pick);
+  usedTitles.add(answerKey(pick.title));
+  usedArtists.add(answerKey(pick.artist));
  }
  return chosen;
 }
+
 async function start(){
  E.setup.classList.add("hidden");
  E.loading.classList.remove("hidden");
@@ -235,7 +178,7 @@ async function start(){
   console.error(e);
   E.loading.classList.add("hidden");
   E.setup.classList.remove("hidden");
-  alert("หมวดนี้หาเพลงตัวอย่างได้ไม่ครบ 6 เพลง ลองเลือก “รวม” หรือหมวดอื่นก่อน");
+  alert("คลังเพลงยังสร้างไม่เสร็จค่ะ รอ GitHub Actions ทำงานเสร็จแล้วรีเฟรชเว็บอีกครั้ง");
  }
 }
 
@@ -364,30 +307,15 @@ function home(){
 async function search(q){
  if(q.trim().length<2){E.sugs.style.display="none";return}
  const nq=norm(q);
- let candidates=pool.filter(x=>norm(x.title).includes(nq)||norm(x.artist).includes(nq));
-
- try{
-  const d=await jsonp(q,40);
-  let extra=clean(d.results);
-  const allowed=((mode==="T-POP"||mode==="แร็ปไทย"||mode==="Kamikaze")&&artistFilter!=="ALL")?[artistFilter]:(C.artists[mode]||Object.values(C.artists).flat());
-  extra=extra.filter(x=>allowed.some(a=>artistMatches(x.artist,a)));
-  candidates.push(...extra);
- }catch(e){}
-
+ let base=pool.length?pool:catalogTracks;
+ let candidates=base.filter(x=>norm(x.title).includes(nq)||norm(x.artist).includes(nq));
  candidates=dedupe(candidates);
 
- // Never let autocomplete behave like a spoiler:
- // always mix in same-mode decoys and randomize order.
  const used=new Set(candidates.map(x=>x.id));
- let decoys=shuffle(pool).filter(x=>!used.has(x.id));
- if((mode==="T-POP"||mode==="แร็ปไทย"||mode==="Kamikaze")&&artistFilter!=="ALL"){
-  const sameArtist=decoys.filter(x=>artistMatches(x.artist,artistFilter));
-  if(sameArtist.length)decoys=sameArtist;
- }
- candidates=shuffle([...candidates,...decoys.slice(0,12)]);
+ let decoys=shuffle(base).filter(x=>!used.has(x.id));
+ candidates=shuffle([...candidates.slice(0,10),...decoys.slice(0,12)]);
  render(candidates.slice(0,12));
 }
-
 function render(a){
  E.sugs.innerHTML="";
  a.forEach(s=>{
@@ -435,15 +363,14 @@ function renderArtistCards(){
 
 async function loadArtistArtwork(artist,button,placeholder){
  try{
-  const d=await jsonp(artist,8);
-  const row=clean(d.results).find(x=>artistMatches(x.artist,artist));
+  if(!catalogTracks.length)await loadLocalCatalog();
+  const row=catalogTracks.find(x=>(Array.isArray(x.artistKeys)&&x.artistKeys.includes(artist))||artistMatches(x.artist,artist));
   if(!row||!row.art)return;
   const img=document.createElement("img");
   img.src=row.art;img.alt=shortArtist(artist);img.loading="lazy";
   placeholder.replaceWith(img);
  }catch(e){}
 }
-
 function syncArtistFilters(){
  const show=mode==="T-POP"||mode==="แร็ปไทย"||mode==="Kamikaze";
  E.artistFilters.classList.toggle("hidden",!show);
